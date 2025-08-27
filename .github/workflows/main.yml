@@ -21,3 +21,8 @@ jobs:
 
       - name: Instalar dependências
         run: poetry install
+
+      - name: Deploy no Render (se testes passarem)
+        run: curl -X POST "$DEPLOY_HOOK"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
