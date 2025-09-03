@@ -12,6 +12,7 @@ services:
 
   midnightlib_app:
     image: midnightlib_app
+    entrypoint: ./entrypoint.sh
     build: .
     ports:
       - "8000:8000"
