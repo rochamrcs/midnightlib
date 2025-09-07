@@ -2,11 +2,13 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from midnightlib.database import get_session
+from midnightlib.database import get_session, sanitization
 from midnightlib.models import User
 from midnightlib.schemas import UserPublic, UserSchema
+from midnightlib.security import get_password_hash
 
 router = APIRouter(prefix='/user', tags=['user'])
 
@@ -33,11 +35,50 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
                 detail='Email already exists',
             )
 
+    password_encrypt = get_password_hash(user.password)
+    username_sanitization = sanitization(user.username)
+    email_sanitization = sanitization(user.email)
+
     db_user = User(
-        username=user.username, password=user.password, email=user.email
+        username=username_sanitization,
+        password=password_encrypt,
+        email=email_sanitization
     )
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
 
     return db_user
+
+
+@router.put('/user/{user.id}', response_model=UserPublic)
+def update_user(
+    user_id: int,
+    user: UserSchema,
+    session: Session = Depends(get_session),
+):
+    db_user = session.scalar(select(User).where(User.id == user_id))
+    if not db_user:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
+
+    try:
+
+        password_encrypt = get_password_hash(user.password)
+        username_sanitization = sanitization(user.username)
+        email_sanitization = sanitization(user.email)
+
+        db_user.username = username_sanitization
+        db_user.password = password_encrypt
+        db_user.email = email_sanitization
+        session.commit()
+        session.refresh(db_user)
+
+        return db_user
+
+    except IntegrityError:
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT,
+            detail='Username or Email already exists',
+        )

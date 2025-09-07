@@ -9,10 +9,12 @@ services:
       POSTGRES_PASSWORD: app_password
     ports:
       - "5432:5432"
+    env_file:
+      - .env
 
   midnightlib_app:
     image: midnightlib_app
-    entrypoint: ./entrypoint.sh
+    #entrypoint: ./entrypoint.sh
     build: .
     ports:
       - "8000:8000"
