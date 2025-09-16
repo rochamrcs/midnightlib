@@ -14,9 +14,12 @@ router = APIRouter(prefix='/user', tags=['user'])
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(user: UserSchema, session: Session = Depends(get_session)):
+async def create_user(
+    user: UserSchema,
+    session: Session = Depends(get_session)
+    ):
 
-    db_user = session.scalar(
+    db_user = await session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
         )
@@ -24,7 +27,6 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
 
     if db_user:
         if db_user.username == user.username:
-
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
                 detail='Username already exists',
@@ -45,19 +47,19 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
         email=email_sanitization
     )
     session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    await session.commit()
+    await session.refresh(db_user)
 
     return db_user
 
 
 @router.put('/user/{user.id}', response_model=UserPublic)
-def update_user(
+async def update_user(
     user_id: int,
     user: UserSchema,
     session: Session = Depends(get_session),
 ):
-    db_user = session.scalar(select(User).where(User.id == user_id))
+    db_user = await session.scalar(select(User).where(User.id == user_id))
     if not db_user:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
@@ -72,8 +74,9 @@ def update_user(
         db_user.username = username_sanitization
         db_user.password = password_encrypt
         db_user.email = email_sanitization
-        session.commit()
-        session.refresh(db_user)
+
+        await session.commit()
+        await session.refresh(db_user)
 
         return db_user
 
