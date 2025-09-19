@@ -2,12 +2,14 @@ from http import HTTPStatus
 
 from fastapi import FastAPI
 
+from midnightlib.routers.auth import auth
 from midnightlib.routers.users import user
 from midnightlib.schemas import Message
 
 app = FastAPI()
 
 app.include_router(user.router)
+app.include_router(auth.router)
 
 
 @app.get('/', status_code=HTTPStatus.OK, response_model=Message)
