@@ -29,6 +29,7 @@ pytest-cov = "^6.2.1"
 taskipy = "^1.14.1"
 ruff = "^0.12.11"
 pytest-asyncio = "^1.2.0"
+testcontainers = "^4.13.1"
 
 [tool.ruff]
 line-length = 79

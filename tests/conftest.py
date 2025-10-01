@@ -7,12 +7,12 @@ from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from testcontainers.postgres import PostgresContainer
 
 from midnightlib.app import app
 from midnightlib.database import get_session
 from midnightlib.models import User, table_registry
 from midnightlib.security import get_password_hash
-from midnightlib.settings import Settings
 
 load_dotenv()
 
@@ -30,8 +30,7 @@ def client(session):
 
 
 @pytest_asyncio.fixture
-async def session():
-    engine = create_async_engine(Settings().DATABASE_URL)
+async def session(engine):
 
     async with engine.begin() as conn:
         await conn.run_sync(table_registry.metadata.create_all)
@@ -78,3 +77,10 @@ def _mock_db_time(*, model, time=datetime(2024, 1, 1)):
 @pytest.fixture
 def mock_db_time():
     return _mock_db_time
+
+
+@pytest.fixture(scope='session')
+def engine():
+    with PostgresContainer('postgres:16', driver='psycopg') as postgres:
+        _engine = create_async_engine(postgres.get_connection_url())
+        yield _engine

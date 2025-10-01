@@ -1,3 +1,5 @@
+import asyncio
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -75,6 +77,8 @@ def run_migrations_online() -> None:
         with context.begin_transaction():
             context.run_migrations()
 
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if context.is_offline_mode():
     run_migrations_offline()

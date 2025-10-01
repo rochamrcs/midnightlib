@@ -1,11 +1,21 @@
 import os
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
-from jwt import encode
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jwt import DecodeError, decode, encode
 from pwdlib import PasswordHash
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from midnightlib.database import get_session
+from midnightlib.models import User
+from midnightlib.settings import Settings
+
+settings = Settings()
 pwd_context = PasswordHash.recommended()
 
 load_dotenv()
